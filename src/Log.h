@@ -2,12 +2,16 @@
 #define SPDLOG_COMPILED_LIB
 #define SPDLOG_FMT_EXTERNAL
 
+#ifdef _WIN32
 #pragma warning(push, 0)
 #pragma warning(disable : 4189)
 #pragma warning(disable : 6285)
+#endif
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
+#ifdef _WIN32
 #pragma warning(pop)
+#endif
 
 #include <stdio.h>
 

@@ -1,8 +1,15 @@
 #include "Log.h"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+#endif
 #include <absl/log/absl_log.h>
 #include <absl/log/log_sink_registry.h>
 #include <absl/log/globals.h>
+#ifdef __clang
+#pragma clang diagnostic pop
+#endif
 
 #include <spdlog/async.h>
 #include <spdlog/sinks/rotating_file_sink.h>
