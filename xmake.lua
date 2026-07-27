@@ -261,4 +261,5 @@ target("evtc_rpc_server")
 	end
 	add_cxxflags("-Wno-format") -- unsigned long long vs unsigned long issues (linux is stupid...)
 	add_cxxflags("-Wno-gnu-zero-variadic-macro-arguments", "-Wno-format-pedantic")
+	add_cxxflags("-Wno-gnu-line-marker") -- seems like xmake bug? Intermediate files produce warnings
 	add_ldflags("-fuse-ld=lld")
