@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #include "Client.h"
 
 #include "evtc_rpc_messages.h"
@@ -823,3 +824,4 @@ void evtc_rpc_client::SendEvent(CallDataBase* pCallData)
 	rpc_message.set_blob(buffer, bufferpos - buffer);
 	pCallData->Context->Stream->Write(rpc_message, pCallData);
 }
+#endif // _WIN32

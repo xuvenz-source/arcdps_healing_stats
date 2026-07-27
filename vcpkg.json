@@ -10,14 +10,21 @@
     "nlohmann-json",
     "prometheus-cpp",
     "spdlog",
-    "imgui",
-    "arcdps-mock",
+    {
+      "name": "imgui",
+      "platform": "windows"
+    },
+    {
+      "name": "arcdps-mock",
+      "platform": "windows"
+    },
     {
       "name": "arcdps-extension",
       "default-features": false,
       "features": [
         "imgui"
-      ]
+      ],
+      "platform": "windows"
     }
   ],
   "overrides": [

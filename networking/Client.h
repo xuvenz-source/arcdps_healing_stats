@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _WIN32
 
 #include <ArcdpsExtension/arcdps_structs_slim.h>
 
@@ -242,3 +243,4 @@ private:
 	std::mutex mStatusLock;
 	evtc_rpc_client_status mStatus;
 };
+#endif // _WIN32
