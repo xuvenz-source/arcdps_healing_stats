@@ -1,6 +1,7 @@
 #include "linux_versions_auto.h"
 
 #include "../networking/Server.h"
+#include "../networking/ServerFrontendGrpc.h"
 #include "../src/Log.h"
 
 #ifdef LINUX
@@ -13,8 +14,9 @@
 
 constexpr static auto MALLOC_STATS_INTERVAL = std::chrono::seconds(600);
 
-static std::unique_ptr<evtc_rpc_server> SERVER;
-static std::thread SERVER_THREAD;
+static std::shared_ptr<evtc_rpc_server> SERVER;
+static std::unique_ptr<ServerFrontendGrpc> FRONTEND_GRPC;
+static std::thread FRONTEND_THREAD_GRPC;
 static std::thread MONITOR_THREAD;
 
 static std::atomic_bool MONITOR_THREAD_SHUTDOWN = false;
@@ -22,7 +24,7 @@ static std::atomic_bool MONITOR_THREAD_SHUTDOWN = false;
 static void signal_handler_shutdown(int pSignal)
 {
 	LogI("Signal {}", pSignal);
-	SERVER->Shutdown();
+	FRONTEND_GRPC->Shutdown();
 }
 
 static void install_signal_handler()
@@ -88,8 +90,9 @@ int main(int pArgumentCount, char** pArgumentVector)
 		return 1;
 	}
 
-	SERVER = std::make_unique<evtc_rpc_server>(pArgumentVector[1], pArgumentVector[2], nullptr);
-	SERVER_THREAD = std::thread(evtc_rpc_server::ThreadStartServe, SERVER.get());
+	SERVER = std::make_shared<evtc_rpc_server>(pArgumentVector[2]);
+	FRONTEND_GRPC = std::make_unique<ServerFrontendGrpc>(pArgumentVector[1], nullptr, std::shared_ptr{SERVER});
+	FRONTEND_THREAD_GRPC = std::thread(ServerFrontendGrpc::ThreadStartServe, FRONTEND_GRPC.get());
 	MONITOR_THREAD = std::thread(monitor_thread_entry);
 
 // Set thread name after this thread is done cloning itself for other threads
@@ -101,11 +104,12 @@ int main(int pArgumentCount, char** pArgumentVector)
 
 	install_signal_handler();
 
-	SERVER_THREAD.join();
+	FRONTEND_THREAD_GRPC.join();
 	MONITOR_THREAD_SHUTDOWN.store(true, std::memory_order_relaxed);
 	MONITOR_THREAD.join();
 
 	uninstall_signal_handler();
+	FRONTEND_GRPC = nullptr;
 	SERVER = nullptr;
 
 	LogI("Exited normally");

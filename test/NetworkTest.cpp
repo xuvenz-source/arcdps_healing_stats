@@ -12,6 +12,7 @@
 #include "Options.h"
 #include "../networking/Client.h"
 #include "../networking/Server.h"
+#include "../networking/ServerFrontendGrpc.h"
 
 #include <ArcdpsMock/arcdps_mock/CombatMock.h>
 #include <utility>
@@ -162,8 +163,9 @@ protected:
 		grpc::SslServerCredentialsOptions server_credentials_options;
 		server_credentials_options.pem_root_certs = UNIT_TEST_CA;
 		server_credentials_options.pem_key_cert_pairs.push_back(UNIT_TEST_CERT_PAIR);
-		Server = std::make_unique<evtc_rpc_server>("localhost:50051", "localhost:50052", &server_credentials_options);
-		mServerThread = std::make_unique<std::thread>(evtc_rpc_server::ThreadStartServe, Server.get());
+		Server = std::make_unique<evtc_rpc_server>("localhost:50052");
+		Frontend = std::make_unique<ServerFrontendGrpc>("localhost:50051", &server_credentials_options, std::shared_ptr{Server});
+		mFrontendThread = std::make_unique<std::thread>(ServerFrontendGrpc::ThreadStartServe, Frontend.get());
 	}
 
 	void TearDown() override
@@ -176,8 +178,8 @@ protected:
 		{
 			thread.join();
 		}
-		Server->Shutdown();
-		mServerThread->join();
+		Frontend->Shutdown();
+		mFrontendThread->join();
 	}
 
 	struct ClientInstance
@@ -227,10 +229,11 @@ private:
 	std::vector<std::unique_ptr<ClientInstance>> mClients;
 
 public:
-	std::unique_ptr<evtc_rpc_server> Server;
+	std::shared_ptr<evtc_rpc_server> Server;
+	std::unique_ptr<ServerFrontendGrpc> Frontend;
 
 private:
-	std::unique_ptr<std::thread> mServerThread;
+	std::unique_ptr<std::thread> mFrontendThread;
 	std::vector<std::thread> mClientThreads;
 };
 
@@ -278,7 +281,8 @@ protected:
 		grpc::SslServerCredentialsOptions server_credentials_options;
 		server_credentials_options.pem_root_certs = UNIT_TEST_CA;
 		server_credentials_options.pem_key_cert_pairs.push_back(UNIT_TEST_CERT_PAIR);
-		Server = std::make_unique<evtc_rpc_server>("localhost:50051", "localhost:50052", &server_credentials_options);
+		Server = std::make_unique<evtc_rpc_server>("localhost:50052");
+		Frontend = std::make_unique<ServerFrontendGrpc>("localhost:50051", &server_credentials_options, std::shared_ptr{Server});
 
 		auto eventhandler = [](cbtevent* /*pEvent*/, uint16_t /*pInstanceId*/)
 		{
@@ -306,7 +310,7 @@ protected:
 		mExports.combat = network_test_mod_combat;
 		mExports.combat_local = network_test_mod_combat_local;
 
-		mServerThread = std::make_unique<std::thread>(evtc_rpc_server::ThreadStartServe, Server.get());
+		mFrontendThread = std::make_unique<std::thread>(ServerFrontendGrpc::ThreadStartServe, Frontend.get());
 		mClientThread = std::make_unique<std::thread>(evtc_rpc_client::ThreadStartServe, Client.get());
 		mPeerClientThread = std::make_unique<std::thread>(evtc_rpc_client::ThreadStartServe, PeerClient.get());
 
@@ -321,8 +325,8 @@ protected:
 		mClientThread->join();
 		mPeerClientThread->join();
 
-		Server->Shutdown();
-		mServerThread->join();
+		Frontend->Shutdown();
+		mFrontendThread->join();
 
 		ACTIVE_PROCESSOR = nullptr;
 		ACTIVE_CLIENT = nullptr;
@@ -465,14 +469,15 @@ protected:
 
 	std::unique_ptr<evtc_rpc_client> PeerClient;
 	std::unique_ptr<evtc_rpc_client> Client;
-	std::unique_ptr<evtc_rpc_server> Server;
+	std::shared_ptr<evtc_rpc_server> Server;
+	std::unique_ptr<ServerFrontendGrpc> Frontend;
 
 private:
 	arcdps_exports mExports;
 
 	std::unique_ptr<std::thread> mPeerClientThread;
 	std::unique_ptr<std::thread> mClientThread;
-	std::unique_ptr<std::thread> mServerThread;
+	std::unique_ptr<std::thread> mFrontendThread;
 };
 
 
