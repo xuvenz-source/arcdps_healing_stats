@@ -67,10 +67,9 @@ rule("protobuf")
 		--batchcmds:show("depcache "..depcache.." mtime "..lowest_mtime)
 	end)
 
-target("evtc_rpc_server")
+function target_common()
 	add_rules("protobuf")
 
-	set_kind("binary")
 	set_warnings("all")
 	set_languages("c++20")
 	local toolset = "clang++"
@@ -245,11 +244,6 @@ target("evtc_rpc_server")
 		"grpc",
 		{name = "others", group = false, static = true})
 
-	add_files("src/Log.cpp", {cxxflags = compilerflags})
-	add_files("evtc_rpc_server/**.cpp", {cxxflags = compilerflags})
-	add_files("networking/**.cpp", {cxxflags = compilerflags})
-	add_files("networking/**.proto")
-
 	add_cxxflags("-fPIC")
 	add_cxxflags("-ggdb3")
 	add_cxxflags("-march=native")
@@ -263,3 +257,27 @@ target("evtc_rpc_server")
 	add_cxxflags("-Wno-gnu-zero-variadic-macro-arguments", "-Wno-format-pedantic")
 	add_cxxflags("-Wno-gnu-line-marker") -- seems like xmake bug? Intermediate files produce warnings
 	add_ldflags("-fuse-ld=lld")
+end
+
+-- yes, having two targets probably results in files getting double compiled. Can't be bothered to figure out xmake static libraries
+
+target("evtc_rpc_server")
+	target_common()
+	set_kind("binary")
+	add_files("src/Log.cpp", {cxxflags = compilerflags})
+	add_files("networking/**.cpp", {cxxflags = compilerflags})
+	add_files("networking/**.proto")
+	add_files("evtc_rpc_server/**.cpp", {cxxflags = compilerflags})
+
+
+target("test")
+	target_common()
+	set_kind("binary")
+
+	add_links("gtest")
+
+	add_files("src/Log.cpp", {cxxflags = compilerflags})
+	add_files("networking/**.cpp", {cxxflags = compilerflags})
+	add_files("networking/**.proto")
+	add_files("test/main.cpp", {cxxflags = compilerflags})
+	add_files("test/SocketTest.cpp", {cxxflags = compilerflags})

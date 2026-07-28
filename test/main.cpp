@@ -1,66 +1,25 @@
+#include "../src/Log.h"
+
+#ifdef _WIN32
 #include "Exports.h"
-#include "Log.h"
+#endif
 
-#include <imgui/imgui.h>
-
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+#else
 #pragma warning(push, 0)
 #pragma warning(disable : 4005)
 #pragma warning(disable : 4389)
+#pragma warning(disable : 26439)
+#pragma warning(disable : 26495)
+#endif
 #include <gtest/gtest.h>
+#ifdef __clang__
+#pragma clang diagnostic pop
+#else
 #pragma warning(pop)
-
-#include <grpcpp/grpcpp.h>
-
-extern "C" __declspec(dllexport) void e3(const char* pString);
-extern "C" __declspec(dllexport) void e5(ImVec4** pColors);
-extern "C" __declspec(dllexport) uint64_t e6();
-extern "C" __declspec(dllexport) uint64_t e7();
-extern "C" __declspec(dllexport) void e9(cbtevent* pEvent, uint32_t pSignature);
-extern "C" __declspec(dllexport) void e10(cbtevent* pEvent, uint32_t pSignature);
-
-#pragma pack(push, 1)
-namespace
-{
-struct ArcModifiers
-{
-	uint16_t _1 = VK_SHIFT;
-	uint16_t _2 = VK_MENU;
-	uint16_t Multi = 0;
-	uint16_t Fill = 0;
-};
-} // anonymous namespace
-#pragma pack(pop)
-
-void e3(const char* /*pString*/)
-{
-	return; // Logging, ignored
-}
-
-void e5(ImVec4** /*pColors*/)
-{
-	return; // Logging, ignored
-}
-
-uint64_t e6()
-{
-	return 0; // everything set to false
-}
-
-uint64_t e7()
-{
-	ArcModifiers mods;
-	return *reinterpret_cast<uint64_t*>(&mods);
-}
-
-void e9(cbtevent*, uint32_t)
-{
-	return; // Ignore, can be overridden by specific test if need be
-}
-
-void e10(cbtevent*, uint32_t)
-{
-	return; // Ignore, can be overridden by specific test if need be
-}
+#endif
 
 class TestLogFlusher : public testing::EmptyTestEventListener
 {
@@ -84,13 +43,15 @@ class TestLogFlusher : public testing::EmptyTestEventListener
 
 int main(int pArgumentCount, char** pArgumentVector)
 {
+#ifdef _WIN32
 	GlobalObjects::IS_UNIT_TEST = true;
+#endif
 
 	Log_::Init(true, "logs/unit_tests.txt");
 	Log_::SetLevel(spdlog::level::trace);
 	Log_::LockLogger();
 
-	::testing::InitGoogleTest(&pArgumentCount, pArgumentVector); 
+	::testing::InitGoogleTest(&pArgumentCount, pArgumentVector);
 
 	testing::UnitTest::GetInstance()->listeners().Append(new TestLogFlusher);
 

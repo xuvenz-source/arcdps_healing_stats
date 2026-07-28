@@ -69,6 +69,7 @@
     <ClCompile Include="EventProcessorTest.cpp" />
     <ClCompile Include="GUITest.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MockExports.cpp" />
     <ClCompile Include="NetworkTest.cpp" />
     <ClCompile Include="LocalStatsTest.cpp" />
     <ClCompile Include="SocketTest.cpp" />
