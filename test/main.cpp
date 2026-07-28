@@ -57,8 +57,8 @@ int main(int pArgumentCount, char** pArgumentVector)
 
 	int result = RUN_ALL_TESTS();
 
-	Log_::LOGGER = nullptr;
 	spdlog::shutdown();
+	Log_::LOGGER = nullptr;
 
 	return result;
 }
