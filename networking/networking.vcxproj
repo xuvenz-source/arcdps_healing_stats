@@ -157,14 +157,18 @@
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="ServerFrontendGrpc.cpp" />
+    <ClCompile Include="ServerFrontendNative.cpp" />
     <ClCompile Include="ServerStatistics.cpp" />
+    <ClCompile Include="Socket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h" />
     <ClInclude Include="evtc_rpc_messages.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="ServerFrontendGrpc.h" />
+    <ClInclude Include="ServerFrontendNative.h" />
     <ClInclude Include="ServerStatistics.h" />
+    <ClInclude Include="Socket.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="evtc_rpc.proto">
