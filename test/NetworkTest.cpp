@@ -163,7 +163,7 @@ protected:
 		grpc::SslServerCredentialsOptions server_credentials_options;
 		server_credentials_options.pem_root_certs = UNIT_TEST_CA;
 		server_credentials_options.pem_key_cert_pairs.push_back(UNIT_TEST_CERT_PAIR);
-		Server = std::make_unique<evtc_rpc_server>("localhost:50052");
+		Server = std::make_unique<evtc_rpc_server>(nullptr);
 		Frontend = std::make_unique<ServerFrontendGrpc>("localhost:50051", &server_credentials_options, std::shared_ptr{Server});
 		mFrontendThread = std::make_unique<std::thread>(ServerFrontendGrpc::ThreadStartServe, Frontend.get());
 	}
@@ -281,7 +281,7 @@ protected:
 		grpc::SslServerCredentialsOptions server_credentials_options;
 		server_credentials_options.pem_root_certs = UNIT_TEST_CA;
 		server_credentials_options.pem_key_cert_pairs.push_back(UNIT_TEST_CERT_PAIR);
-		Server = std::make_unique<evtc_rpc_server>("localhost:50052");
+		Server = std::make_unique<evtc_rpc_server>(nullptr);
 		Frontend = std::make_unique<ServerFrontendGrpc>("localhost:50051", &server_credentials_options, std::shared_ptr{Server});
 
 		auto eventhandler = [](cbtevent* /*pEvent*/, uint16_t /*pInstanceId*/)

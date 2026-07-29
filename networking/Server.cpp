@@ -7,11 +7,14 @@ ConnectionContext::ConnectionContext(std::unique_ptr<ConnectionInterface>&& pInt
 {}
 
 evtc_rpc_server::evtc_rpc_server(const char* pPrometheusEndpoint)
-	: mPrometheusExposer(pPrometheusEndpoint)
 {
 	mStatistics = std::make_shared<ServerStatistics>(*this);
-	mPrometheusExposer.RegisterCollectable(mStatistics->PrometheusRegistry);
-	mPrometheusExposer.RegisterCollectable(mStatistics);
+	if (pPrometheusEndpoint != nullptr)
+	{
+		mPrometheusExposer.emplace(pPrometheusEndpoint);
+		mPrometheusExposer->RegisterCollectable(mStatistics->PrometheusRegistry);
+		mPrometheusExposer->RegisterCollectable(mStatistics);
+	}
 
 	LogI("Started - pPrometheusEndpoint={}", pPrometheusEndpoint);
 }

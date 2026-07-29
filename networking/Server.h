@@ -69,7 +69,7 @@ private:
 	std::map<std::string, std::shared_ptr<ConnectionContext>> mRegisteredAgents;
 
 	std::shared_ptr<ServerStatistics> mStatistics;
-	prometheus::Exposer mPrometheusExposer;
+	std::optional<prometheus::Exposer> mPrometheusExposer;
 	
 	std::atomic<uint64_t> mConflictingClientDisconnectThresholdMs = 30000;
 };
