@@ -6,6 +6,7 @@
 #endif
 
 #include <cstdint>
+#include <string_view>
 
 enum class SocketError
 {
@@ -50,9 +51,18 @@ public:
 
 	SocketError getsockname(sockaddr* name, socklen_t* namelen);
 
+	SocketError socket_and_bind(std::string_view pBindEndpoint);
+
 	SocketHandleT GetUnderlyingHandle() const;
 
+#ifndef TEST
 private:
+#endif
+	// Parse e.g. "127.0.0.1:12345" to "127.0.0.1", 12345.
+	// pPortRequired denotes whether missing port is an error. If not set, pOutPort will be left untouched in case the
+	// input string is missing a port
+	bool ParseEndpoint(std::string_view pEndpoint, bool pPortRequired, std::string_view* pOutAddress, uint16_t* pOutPort);
+
 	SocketHandleT mHandle;
 };
 

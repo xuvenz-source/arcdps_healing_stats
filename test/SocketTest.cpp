@@ -243,3 +243,34 @@ TEST(SocketTest, FullFlowOneClientIpv6)
 	ASSERT_EQ(recvedBytes, sizeof(SEND_DATA));
 	ASSERT_EQ(memcmp(receiveData, SEND_DATA, recvedBytes), 0);
 }
+
+TEST(SocketTest, SocketAndBindLoopback)
+{
+	Socket s;
+	ASSERT_EQ(s.socket_and_bind("127.0.0.1:0"), SocketError::None);
+}
+
+TEST(SocketTest, SocketAndBindAny)
+{
+	Socket s;
+	ASSERT_EQ(s.socket_and_bind("0.0.0.0:0"), SocketError::None);
+}
+
+TEST(SocketTest, SocketAndBindLoopbackMissingPort)
+{
+	Socket s;
+	ASSERT_EQ(s.socket_and_bind("127.0.0.1"), SocketError::Unknown);
+}
+
+TEST(SocketTest, SocketAndBindAnyMissingPort)
+{
+	Socket s;
+	ASSERT_EQ(s.socket_and_bind("0.0.0.0"), SocketError::Unknown);
+}
+
+TEST(SocketTest, SocketAndBindBadAddress)
+{
+	Socket s;
+	// hopefully someone doesn't run the test on the machine with this IP :)
+	ASSERT_EQ(s.socket_and_bind("123.124.125.126:0"), SocketError::Unknown);
+}

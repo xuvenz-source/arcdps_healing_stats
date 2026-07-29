@@ -7,11 +7,17 @@
 #include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #define INVALID_SOCKET -1
 #endif
 
 #include <charconv>
+#include <cstdint>
 #include <cstring>
+#include <system_error>
+#include <string>
 
 namespace
 {
@@ -383,7 +389,83 @@ SocketError Socket::getsockname(sockaddr* name, socklen_t* namelen)
 	return SocketError::None;
 }
 
+SocketError Socket::socket_and_bind(std::string_view pBindEndpoint)
+{
+	std::string_view addressView;
+	uint16_t port;
+	if (ParseEndpoint(pBindEndpoint, true, &addressView, &port) == false)
+	{
+		LogE("Failed to parse {}", pBindEndpoint);
+		return SocketError::Unknown;
+	}
+	
+	addrinfo* resolvedInfo;
+	{
+		// needs null termination
+		std::string addressStr{addressView};
+
+		addrinfo hint{};
+		hint.ai_flags = AI_ADDRCONFIG;
+		hint.ai_family = AF_UNSPEC;
+		hint.ai_socktype = SOCK_STREAM;
+		hint.ai_protocol = IPPROTO_TCP;
+		int res = ::getaddrinfo(addressStr.c_str(), nullptr, &hint, &resolvedInfo);
+		if (res != 0)
+		{
+			LogE("getaddrinfo {} failed - {} - {}", addressStr, res, SockErrStr::Last());
+			return SocketError::Unknown;
+		}
+	}
+	
+	{
+		SocketError err = socket(resolvedInfo->ai_family, resolvedInfo->ai_socktype, resolvedInfo->ai_protocol);
+		if (err != SocketError::None)
+		{
+			freeaddrinfo(resolvedInfo);
+			return err;
+		}
+	}
+
+	{
+		SocketError err = bind(resolvedInfo->ai_addr, static_cast<socklen_t>(resolvedInfo->ai_addrlen));
+		if (err != SocketError::None)
+		{
+			freeaddrinfo(resolvedInfo);
+			return err;
+		}
+	}
+
+	freeaddrinfo(resolvedInfo);
+	return SocketError::None;
+}
+
 SocketHandleT Socket::GetUnderlyingHandle() const
 {
 	return mHandle;
+}
+
+bool Socket::ParseEndpoint(std::string_view pEndpoint, bool pPortRequired, std::string_view* pOutAddress, uint16_t* pOutPort)
+{
+	std::string_view::size_type colonPos = pEndpoint.find(':');
+	if (colonPos == std::string_view::npos)
+	{
+		if (pPortRequired)
+		{
+			return false;
+		}
+			
+		*pOutAddress = pEndpoint;
+		return true;
+	}
+
+	std::string_view portStr = pEndpoint.substr(colonPos + 1);
+	*pOutAddress = pEndpoint.substr(0, colonPos);
+
+	std::from_chars_result portParseRes = std::from_chars(portStr.data(), portStr.data() + portStr.size(), *pOutPort);
+	if (portParseRes.ec != std::errc{})
+	{
+		return false;
+	}
+
+	return true;
 }
