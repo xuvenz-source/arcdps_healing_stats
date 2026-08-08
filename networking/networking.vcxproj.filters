@@ -27,9 +27,6 @@
     <ClCompile Include="ServerFrontendGrpc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ServerFrontendNative.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Socket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -48,9 +45,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ServerFrontendGrpc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ServerFrontendNative.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Socket.h">
