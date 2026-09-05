@@ -2,6 +2,9 @@ name: Build Windows
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
@@ -17,26 +20,49 @@ jobs:
             Add-Content -Path $env:GITHUB_ENV -Value "VCPKG_ROOT=D:/vcpkg"
           }
 
-      - uses: actions/checkout@v6
+      - name: Checkout source and submodules
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
-      - name: Add msbuild to PATH
+      - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v3
 
       - name: Integrate vcpkg with MSBuild
         run: vcpkg integrate install
 
-      - name: Build solution
+      - name: Build Release x64
         shell: pwsh
         run: |
           $sln = (Get-ChildItem -Path .\* -File -Include *.sln, *.slnx | Select-Object -First 1).Name
           if (![string]::IsNullOrEmpty($sln)) {
             Write-Host "Building $sln with MSBuild"
-            msbuild $sln
+            msbuild $sln /m /p:Configuration=Release /p:Platform=x64
           } elseif (Test-Path "CMakeLists.txt") {
             Write-Host "Building CMake project with CMake + vcpkg toolchain"
-            cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
             cmake --build build --config Release
           } else {
             Write-Error "No solution or CMakeLists.txt found to build."
             exit 1
           }
+
+      - name: Collect Heal Stats DLL
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -Path . -Recurse -Filter arcdps_healing_stats.dll -File |
+            Where-Object { $_.FullName -notmatch 'vcpkg_installed' } |
+            Select-Object -First 1
+          if ($null -eq $dll) {
+            Write-Error "arcdps_healing_stats.dll was not produced by the build."
+            exit 1
+          }
+          Copy-Item $dll.FullName -Destination .\arcdps_healing_stats_GW2_UI.dll -Force
+          Write-Host "Collected $($dll.FullName)"
+
+      - name: Upload ready-to-install DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: arcdps_healing_stats_GW2_UI
+          path: arcdps_healing_stats_GW2_UI.dll
+          if-no-files-found: error
