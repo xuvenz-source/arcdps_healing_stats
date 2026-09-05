@@ -5,13 +5,11 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
   build:
     runs-on: windows-2025-vs2026
+    timeout-minutes: 90
 
     steps:
       - name: Move vcpkg to D drive
@@ -31,24 +29,28 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v3
 
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v4
+        with:
+          path: D:\vcpkg-cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Configure vcpkg binary cache
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path 'D:\vcpkg-cache' | Out-Null
+          Add-Content -Path $env:GITHUB_ENV -Value 'VCPKG_BINARY_SOURCES=clear;files,D:\vcpkg-cache,readwrite'
+
       - name: Integrate vcpkg with MSBuild
         run: vcpkg integrate install
 
-      - name: Build Release x64
+      - name: Build Heal Stats only - Release x64
         shell: pwsh
         run: |
-          $sln = (Get-ChildItem -Path .\* -File -Include *.sln, *.slnx | Select-Object -First 1).Name
-          if (![string]::IsNullOrEmpty($sln)) {
-            Write-Host "Building $sln with MSBuild"
-            msbuild $sln /m /p:Configuration=Release /p:Platform=x64
-          } elseif (Test-Path "CMakeLists.txt") {
-            Write-Host "Building CMake project with CMake + vcpkg toolchain"
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
-            cmake --build build --config Release
-          } else {
-            Write-Error "No solution or CMakeLists.txt found to build."
-            exit 1
-          }
+          Write-Host "Building only the arcdps_healing_stats target and required dependencies"
+          msbuild arcdps_personal_stats.sln /m /t:arcdps_healing_stats /p:Configuration=Release /p:Platform=x64 /v:minimal
 
       - name: Collect Heal Stats DLL
         shell: pwsh
