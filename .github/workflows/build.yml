@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
@@ -66,5 +69,3 @@ jobs:
           name: arcdps_healing_stats_GW2_UI
           path: arcdps_healing_stats_GW2_UI.dll
           if-no-files-found: error
-
-# Triggered after Actions was enabled on the fork.
