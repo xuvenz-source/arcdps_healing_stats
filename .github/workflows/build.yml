@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: windows-2025-vs2026
-    timeout-minutes: 90
+    timeout-minutes: 240
 
     steps:
       - name: Move vcpkg to D drive
@@ -36,6 +36,7 @@ jobs:
           key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-${{ runner.os }}-
+          save-always: true
 
       - name: Configure vcpkg binary cache
         shell: pwsh
