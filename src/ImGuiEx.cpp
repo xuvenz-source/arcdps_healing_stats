@@ -1,5 +1,14 @@
 #include "ImGuiEx.h"
 
+namespace
+{
+	// GW2-inspired palette used by Heal Stats rows.
+	constexpr ImU32 GW2_TEXT = IM_COL32(242, 235, 221, 255);       // #F2EBDDFF
+	constexpr ImU32 GW2_GOLD = IM_COL32(235, 202, 128, 255);       // #EBCA80FF
+	constexpr ImU32 GW2_HEAL_BAR = IM_COL32(85, 107, 47, 176);     // #556B2FB0
+	constexpr ImU32 GW2_BARRIER_BAR = IM_COL32(168, 137, 69, 176); // #A88945B0
+}
+
 float ImGuiEx::CalcWindowHeight(size_t pLineCount, float pExtraHeight, ImGuiWindow* pWindow)
 {
 	if (pWindow == nullptr)
@@ -59,7 +68,7 @@ void ImGuiEx::SmallUnindent()
 
 float ImGuiEx::StatsEntry(std::string_view pLeftText, std::string_view pRightText, std::optional<float> pFillRatio, std::optional<float> pBarrierGenerationRatio, std::optional<std::string_view> pIndexNumber, std::optional<std::string> pProfessionText, void* pProfessionIcon, std::optional<ImVec4> pLeftTextColour, std::optional<ImVec4> pHealColour, std::optional<ImVec4> pBarrierGenerationColour, bool pSelf)
 {
-	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(204, 204, 212, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, GW2_TEXT);
 	ImGui::BeginGroup();
 
 	//ImGui::PushID(pUniqueId);
@@ -79,8 +88,8 @@ float ImGuiEx::StatsEntry(std::string_view pLeftText, std::string_view pRightTex
 
 		float healingRatio = *pFillRatio;
 
-		ImU32 healingColor = pHealColour.has_value() ? ImGui::ColorConvertFloat4ToU32(*pHealColour) : IM_COL32(102, 178, 102, 128);
-		ImU32 barrierColor = pBarrierGenerationColour.has_value() ? ImGui::ColorConvertFloat4ToU32(*pBarrierGenerationColour) : IM_COL32(255, 225, 0, 128);
+		ImU32 healingColor = pHealColour.has_value() ? ImGui::ColorConvertFloat4ToU32(*pHealColour) : GW2_HEAL_BAR;
+		ImU32 barrierColor = pBarrierGenerationColour.has_value() ? ImGui::ColorConvertFloat4ToU32(*pBarrierGenerationColour) : GW2_BARRIER_BAR;
 
 		if (pBarrierGenerationRatio.has_value() == true)
 		{
@@ -105,7 +114,7 @@ float ImGuiEx::StatsEntry(std::string_view pLeftText, std::string_view pRightTex
 	{
 		indexNumberSize = ImGui::CalcTextSize(pIndexNumber->data(), pIndexNumber->data() + pIndexNumber->size()) + ImGui::GetStyle().ItemSpacing;
 
-		TextColoredUnformatted(std::optional<ImU32>(IM_COL32(255, 255, 97, 255)), *pIndexNumber);
+		TextColoredUnformatted(std::optional<ImU32>(GW2_GOLD), *pIndexNumber);
 		ImGui::SameLine();
 	}
 
@@ -128,7 +137,7 @@ float ImGuiEx::StatsEntry(std::string_view pLeftText, std::string_view pRightTex
 		ImGui::SameLine();
 	}
 
-	auto leftTextColour = pLeftTextColour.has_value() ? ImGui::ColorConvertFloat4ToU32(*pLeftTextColour) : pSelf ? std::optional<ImU32>(IM_COL32(255, 255, 97, 255)) : std::nullopt;
+	auto leftTextColour = pLeftTextColour.has_value() ? ImGui::ColorConvertFloat4ToU32(*pLeftTextColour) : pSelf ? std::optional<ImU32>(GW2_GOLD) : std::nullopt;
 	TextColoredUnformatted(leftTextColour, pLeftText);
 
 	ImGui::SameLine();
